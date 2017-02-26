@@ -4,6 +4,7 @@
 
 import 'package:markdown/markdown.dart' as md;
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
 import 'markdown_style_raw.dart';
@@ -166,6 +167,7 @@ class _MarkdownBodyRawState extends State<MarkdownBodyRaw> {
     // TODO: This can be optimized by doing the split and removing \r at the same time
     List<String> lines = config.data.replaceAll('\r\n', '\n').split('\n');
     md.Document document = new md.Document();
+    document.blockSyntaxes = [new md.TableSyntax()];
 
     _Renderer renderer = new _Renderer();
     _cachedBlocks = renderer.render(document.parseLines(lines), markdownStyle, syntaxHighlighter, _linkHandler);
@@ -284,7 +286,7 @@ class _Renderer implements md.NodeVisitor {
     }
   }
 
-  static const List<String> _kBlockTags = const <String>['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'img', 'pre', 'ol', 'ul'];
+  static const List<String> _kBlockTags = const <String>['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'img', 'pre', 'ol', 'ul', 'table', 'thead', 'th', 'tr', 'td' ];
   static const List<String> _kListTags = const <String>['ul', 'ol'];
 
   bool _isBlockTag(String tag) {
@@ -382,10 +384,15 @@ class _Block {
         subWidgets.add(subBlock.build(context));
       }
 
-      contents = new Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: subWidgets
-      );
+
+      if (tag == 'table') {
+        contents = _buildTableContents(context);
+      } else {
+        contents = new Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: subWidgets
+        );
+      }
     } else {
       TextSpan span = _stackToTextSpan(new _MarkdownNodeList(stack));
       contents = new RichText(text: span);
@@ -432,12 +439,16 @@ class _Block {
       padding = new EdgeInsets.all(markdownStyle.codeblockPadding);
     }
 
-    return new Container(
-      padding: padding,
-      margin: new EdgeInsets.only(bottom: spacing),
-      child: contents,
-      decoration: decoration
-    );
+    if (tag == 'tr' || tag == 'th' || tag == 'td' || tag == 'thead') {
+      return contents; //omit container
+    } else {
+      return new Container(
+          padding: padding,
+          margin: new EdgeInsets.only(bottom: spacing),
+          child: contents,
+          decoration: decoration
+      );
+    }
   }
 
   TextSpan _stackToTextSpan(_MarkdownNode stack) {
@@ -493,6 +504,40 @@ class _Block {
     }
 
     return new Image.network(path, width: width, height: height);
+  }
+
+  Widget _buildTableContents(BuildContext context) {
+    List<_Block> colBlocks = subBlocks[0]?.subBlocks[0]?.subBlocks;
+
+    assert(colBlocks != null);
+
+    List<DataColumn> cols = colBlocks.map((_Block b) =>
+    new DataColumn(label: b.build(context))
+    ).toList();
+
+    List<DataRow> rows = subBlocks.where((_Block rowBlock) =>
+    rowBlock.tag != 'thead')
+        .map((_Block rowBlock) =>
+    new DataRow(
+        cells: rowBlock.subBlocks.map((_Block cellBlock) =>
+        new DataCell(cellBlock.build(context))
+        ).toList())
+    ).toList();
+
+    return new Material(
+        child: new Container(
+            height: (rows.length - 1) * 48.0 + 104.0,
+            child: new ListView(
+                scrollDirection: Axis.horizontal,
+                padding: new EdgeInsets.all(0.0),
+                children: <Widget>[new DataTable(
+                  columns: cols,
+                  rows: rows,
+                )
+                ]
+            )
+        )
+    );
   }
 }
 

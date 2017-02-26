@@ -23,6 +23,8 @@ class MarkdownStyleRaw {
     this.em,
     this.strong,
     this.blockquote,
+    this.th,
+    this.td,
     this.blockSpacing,
     this.listIndent,
     this.blockquotePadding,
@@ -48,6 +50,8 @@ class MarkdownStyleRaw {
     TextStyle em,
     TextStyle strong,
     TextStyle blockquote,
+    TextStyle th,
+    TextStyle td,
     double blockSpacing,
     double listIndent,
     double blockquotePadding,
@@ -68,6 +72,8 @@ class MarkdownStyleRaw {
       em: em != null ? em : this.em,
       strong: strong != null ? strong : this.strong,
       blockquote: blockquote != null ? blockquote : this.blockquote,
+      th: th != null ? th : this.th,
+      td: td != null ? td : this.td,
       blockSpacing: blockSpacing != null ? blockSpacing : this.blockSpacing,
       listIndent: listIndent != null ? listIndent : this.listIndent,
       blockquotePadding: blockquotePadding != null ? blockquotePadding : this.blockquotePadding,
@@ -89,6 +95,8 @@ class MarkdownStyleRaw {
   final TextStyle em;
   final TextStyle strong;
   final TextStyle blockquote;
+  final TextStyle th;
+  final TextStyle td;
   final double blockSpacing;
   final double listIndent;
   final double blockquotePadding;
@@ -115,7 +123,9 @@ class MarkdownStyleRaw {
       'h6': h6,
       'em': em,
       'strong': strong,
-      'blockquote': blockquote
+      'blockquote': blockquote,
+      'th': th,
+      'td': td
     };
   }
 }

@@ -104,6 +104,36 @@ void main() {
       );
   });
 
+  testWidgets('Table', (WidgetTester tester) async {
+      final List<List<List<String>>> tables = [
+        [["Item1","Item2"],
+         ["-","-"],
+         ["foo","bar"],
+         ["","baz"],
+         ["",""],
+         ["biz",""]],
+        [["Item1","Item2","Item3", "Item4"],
+         ["-","-","----","----"],
+         ["foo","bar","",""]],
+      ];
+
+      for (List<List<String>> tData in tables) {
+        final String tableMd = tData.map((List<String> l) => "|${l.join("|")}|").join("\n");
+        await tester.pumpWidget(new MarkdownBody(data: tableMd));
+
+        DataTable tableWidget = tester.allWidgets.firstWhere((
+            Widget widget) => widget is DataTable);
+        expect(tableWidget.columns.length, tData[0].length);
+        expect(tableWidget.rows.length, tData.length - 2);
+
+        for (int i = 2; i < tData.length; i++) {
+          _expectTextStrings(
+              tableWidget.rows[i - 2].cells.map((DataCell c) => c.widget),
+              tData[i]);
+        }
+      }
+  });
+
   testWidgets('Changing config - data', (WidgetTester tester) async {
       await tester.pumpWidget(new Markdown(data: 'Data1'));
       _expectTextStrings(tester.allWidgets, <String>['Data1']);
